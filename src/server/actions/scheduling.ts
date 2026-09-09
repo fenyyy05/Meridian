@@ -49,11 +49,8 @@ export async function generateSchedule(dateStr: string) {
   const [startHour, startMin] = (preferredStudyStart || "09:00").split(":").map(Number);
   const [endHour, endMin] = (preferredStudyEnd || "17:00").split(":").map(Number);
 
-  let currentTime = new Date(targetDate);
-  currentTime.setHours(startHour, startMin, 0, 0);
-
-  const endTime = new Date(targetDate);
-  endTime.setHours(endHour, endMin, 0, 0);
+  let currentTime = new Date(targetDate.getTime() + (startHour * 60 + startMin) * 60000);
+  const endTime = new Date(targetDate.getTime() + (endHour * 60 + endMin) * 60000);
 
   // Use ML to predict distraction risk (dummy input values for context)
   const risk = await predictDistractionRisk({
