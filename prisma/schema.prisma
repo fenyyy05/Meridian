@@ -1,0 +1,383 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                    String                 @id @default(cuid())
+  email                 String                 @unique
+  name                  String?
+  passwordHash          String?
+  image                 String?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  profile               Profile?
+  subjects              Subject[]
+  tasks                 Task[]
+  studySessions         StudySession[]
+  distractionEvents     DistractionEvent[]
+  studyStreak           StudyStreak?
+  schedules             Schedule[]
+  predictions           Prediction[]
+  recommendations       Recommendation[]
+  resourceInteractions  ResourceInteraction[]
+  userPreferences       UserPreference[]
+  productivitySnapshots ProductivitySnapshot[]
+}
+
+model Profile {
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  academicLevel       String?
+  preferredStudyStart String?
+  preferredStudyEnd   String?
+  dailyGoalMinutes    Int      @default(120)
+  focusDuration       Int      @default(25)
+  breakDuration       Int      @default(5)
+  onboardingComplete  Boolean  @default(false)
+  timezone            String   @default("UTC")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Subject {
+  id        String     @id @default(cuid())
+  userId    String
+  name      String
+  color     String     @default("#B8A9C9")
+  icon      String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topics    Topic[]
+  tasks     Task[]
+  resources Resource[]
+
+  @@unique([userId, name])
+}
+
+model Topic {
+  id              String     @id @default(cuid())
+  subjectId       String
+  name            String
+  difficulty      Int        @default(3)
+  confidenceLevel Int        @default(3)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  subject         Subject    @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  tasks           Task[]
+  resources       Resource[]
+
+  @@unique([subjectId, name])
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  COMPLETED
+  POSTPONED
+}
+
+model Task {
+  id               String          @id @default(cuid())
+  userId           String
+  subjectId        String?
+  topicId          String?
+  title            String
+  description      String?
+  deadline         DateTime?
+  estimatedMinutes Int             @default(30)
+  difficulty       Int             @default(3)
+  priority         Int             @default(3)
+  computedPriority Float           @default(0)
+  status           TaskStatus      @default(TODO)
+  postponedCount   Int             @default(0)
+  completedAt      DateTime?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject          Subject?        @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  topic            Topic?          @relation(fields: [topicId], references: [id], onDelete: SetNull)
+  subTasks         SubTask[]
+  studySessions    StudySession[]
+  scheduleBlocks   ScheduleBlock[]
+
+  @@index([userId])
+  @@index([userId, status])
+  @@index([userId, deadline])
+}
+
+enum TaskSource {
+  MANUAL
+  AI_GENERATED
+}
+
+model SubTask {
+  id               String     @id @default(cuid())
+  taskId           String
+  title            String
+  description      String?
+  estimatedMinutes Int        @default(15)
+  difficulty       Int        @default(3)
+  order            Int        @default(0)
+  status           TaskStatus @default(TODO)
+  source           TaskSource @default(MANUAL)
+  completedAt      DateTime?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  task             Task       @relation(fields: [taskId], references: [id], onDelete: Cascade)
+}
+
+enum SessionStatus {
+  ACTIVE
+  COMPLETED
+  INTERRUPTED
+  ABANDONED
+}
+
+model StudySession {
+  id                String             @id @default(cuid())
+  userId            String
+  taskId            String?
+  startTime         DateTime
+  endTime           DateTime?
+  plannedDuration   Int
+  actualDuration    Int?
+  focusScore        Int?
+  status            SessionStatus      @default(ACTIVE)
+  distractionCount  Int                @default(0)
+  notes             String?
+  createdAt         DateTime           @default(now())
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task              Task?              @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  distractionEvents DistractionEvent[]
+
+  @@index([userId])
+  @@index([userId, startTime])
+  @@index([userId, status])
+}
+
+enum DistractionCategory {
+  SOCIAL_MEDIA
+  YOUTUBE
+  MESSAGING
+  GAMING
+  NOTIFICATIONS
+  ENVIRONMENT
+  TAB_SWITCH
+  OTHER
+}
+
+model DistractionEvent {
+  id          String              @id @default(cuid())
+  sessionId   String?
+  userId      String
+  category    DistractionCategory
+  duration    Int?
+  description String?
+  timestamp   DateTime            @default(now())
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session     StudySession?       @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([sessionId])
+  @@index([userId, timestamp])
+}
+
+model StudyStreak {
+  id             String           @id @default(cuid())
+  userId         String           @unique
+  currentStreak  Int              @default(0)
+  longestStreak  Int              @default(0)
+  lastActiveDate DateTime?
+  updatedAt      DateTime         @updatedAt
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activities     StreakActivity[]
+}
+
+model StreakActivity {
+  id                 String      @id @default(cuid())
+  streakId           String
+  date               DateTime    @db.Date
+  qualifyingActivity String
+  focusMinutes       Int         @default(0)
+  tasksCompleted     Int         @default(0)
+  createdAt          DateTime    @default(now())
+  streak             StudyStreak @relation(fields: [streakId], references: [id], onDelete: Cascade)
+
+  @@unique([streakId, date])
+}
+
+enum ResourceType {
+  ARTICLE
+  VIDEO
+  NOTES
+  DOCUMENTATION
+  PRACTICE_PROBLEMS
+  QUESTION_SET
+}
+
+model Resource {
+  id               String                @id @default(cuid())
+  subjectId        String?
+  topicId          String?
+  title            String
+  type             ResourceType
+  difficulty       Int                   @default(3)
+  estimatedMinutes Int?
+  description      String?
+  url              String?
+  tags             String[]
+  isSeeded         Boolean               @default(false)
+  createdByUserId  String?
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  subject          Subject?              @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  topic            Topic?                @relation(fields: [topicId], references: [id], onDelete: SetNull)
+  interactions     ResourceInteraction[]
+
+  @@index([subjectId])
+  @@index([topicId])
+}
+
+model ResourceInteraction {
+  id          String    @id @default(cuid())
+  resourceId  String
+  userId      String
+  saved       Boolean   @default(false)
+  completed   Boolean   @default(false)
+  rating      Int?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  resource    Resource  @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([resourceId, userId])
+}
+
+enum ScheduleStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+model Schedule {
+  id        String          @id @default(cuid())
+  userId    String
+  date      DateTime        @db.Date
+  status    ScheduleStatus  @default(DRAFT)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  blocks    ScheduleBlock[]
+
+  @@unique([userId, date])
+}
+
+enum BlockType {
+  STUDY
+  BREAK
+}
+
+enum BlockStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  SKIPPED
+}
+
+model ScheduleBlock {
+  id         String      @id @default(cuid())
+  scheduleId String
+  taskId     String?
+  startTime  DateTime
+  endTime    DateTime
+  blockType  BlockType
+  status     BlockStatus @default(SCHEDULED)
+  notes      String?
+  createdAt  DateTime    @default(now())
+  schedule   Schedule    @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  task       Task?       @relation(fields: [taskId], references: [id], onDelete: SetNull)
+}
+
+model ProductivitySnapshot {
+  id                 String   @id @default(cuid())
+  userId             String
+  date               DateTime @db.Date
+  totalFocusMinutes  Int      @default(0)
+  tasksCompleted     Int      @default(0)
+  tasksPostponed     Int      @default(0)
+  avgFocusScore      Float?
+  distractionCount   Int      @default(0)
+  distractionMinutes Int      @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+}
+
+enum PredictionType {
+  DISTRACTION_RISK
+  TOPIC_STRUGGLE
+  PRODUCTIVITY_WINDOW
+}
+
+model Prediction {
+  id           String         @id @default(cuid())
+  userId       String
+  type         PredictionType
+  input        Json
+  output       Json
+  confidence   Float?
+  modelVersion String?
+  createdAt    DateTime       @default(now())
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, type])
+}
+
+enum RecommendationType {
+  RESOURCE
+  STUDY_ACTION
+  SCHEDULE_ADJUSTMENT
+  TOPIC_FOCUS
+}
+
+model Recommendation {
+  id         String             @id @default(cuid())
+  userId     String
+  type       RecommendationType
+  content    String
+  reason     String?
+  resourceId String?
+  priority   Int                @default(0)
+  seen       Boolean            @default(false)
+  actedUpon  Boolean            @default(false)
+  expiresAt  DateTime?
+  createdAt  DateTime           @default(now())
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, seen])
+}
+
+model UserPreference {
+  id        String   @id @default(cuid())
+  userId    String
+  key       String
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, key])
+}

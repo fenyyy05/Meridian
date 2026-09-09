@@ -1,0 +1,157 @@
+@import "tailwindcss";
+
+:root {
+  --background: #FBF8F3;
+  --foreground: #2D2D2D;
+  --card: #FFFFFF;
+  --card-foreground: #2D2D2D;
+  --popover: #FFFFFF;
+  --popover-foreground: #2D2D2D;
+  --primary: #B8A9C9;
+  --primary-foreground: #FFFFFF;
+  --secondary: #FBF8F3;
+  --secondary-foreground: #2D2D2D;
+  --muted: #F5F2ED;
+  --muted-foreground: #6B6B6B;
+  --accent: #B8A9C9;
+  --accent-foreground: #FFFFFF;
+  --destructive: #D4756A;
+  --destructive-foreground: #FFFFFF;
+  --border: #E8E4DF;
+  --input: #E8E4DF;
+  --ring: #B8A9C9;
+  --radius: 0.75rem;
+
+  /* Meridian brand colors */
+  --meridian-lavender: #B8A9C9;
+  --meridian-pink: #E8C4C4;
+  --meridian-blue: #A7C4D4;
+  --meridian-sage: #B5C9B3;
+  --meridian-cream: #FBF8F3;
+  --meridian-charcoal: #2D2D2D;
+  --meridian-gray: #6B6B6B;
+  --meridian-muted: #9B9B9B;
+  --meridian-border: #E8E4DF;
+  --meridian-danger: #D4756A;
+  --meridian-gold: #D4C5A9;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-lavender: var(--meridian-lavender);
+  --color-m-pink: var(--meridian-pink);
+  --color-m-blue: var(--meridian-blue);
+  --color-sage: var(--meridian-sage);
+  --color-cream: var(--meridian-cream);
+  --color-charcoal: var(--meridian-charcoal);
+  --color-m-gray: var(--meridian-gray);
+  --color-m-muted: var(--meridian-muted);
+  --color-m-border: var(--meridian-border);
+  --color-danger: var(--meridian-danger);
+  --color-gold: var(--meridian-gold);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--meridian-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--meridian-muted);
+}
+
+/* Focus visible for keyboard navigation */
+:focus-visible {
+  outline: 2px solid var(--meridian-lavender);
+  outline-offset: 2px;
+}
+
+/* Skip link */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--meridian-charcoal);
+  color: white;
+  padding: 8px 16px;
+  z-index: 100;
+  transition: top 0.2s;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* Shimmer animation for skeleton loading */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--meridian-border) 25%,
+    #f0ede8 50%,
+    var(--meridian-border) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
