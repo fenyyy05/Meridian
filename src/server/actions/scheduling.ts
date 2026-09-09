@@ -13,8 +13,8 @@ export async function generateSchedule(dateStr: string) {
   }
 
   const userId = session.user.id;
-  const targetDate = new Date(dateStr);
-  targetDate.setHours(0, 0, 0, 0);
+  const { getLocalStartOfDay } = await import('@/lib/date-utils');
+  const targetDate = getLocalStartOfDay(dateStr);
 
   // Fetch user profile and tasks
   const user = await prisma.user.findUnique({
@@ -175,8 +175,8 @@ export async function getSchedule(dateStr: string) {
     throw new Error("Unauthorized");
   }
 
-  const targetDate = new Date(dateStr);
-  targetDate.setHours(0, 0, 0, 0);
+  const { getLocalStartOfDay } = await import('@/lib/date-utils');
+  const targetDate = getLocalStartOfDay(dateStr);
 
   const schedule = await prisma.schedule.findUnique({
     where: {

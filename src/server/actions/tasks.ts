@@ -249,8 +249,8 @@ export async function completeTask(id: string) {
 }
 
 async function updateStreakForActivity(userId: string, activity: string) {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
+  const { getLocalToday } = await import('@/lib/date-utils');
+  const today = getLocalToday();
 
   const streak = await prisma.studyStreak.findUnique({
     where: { userId },

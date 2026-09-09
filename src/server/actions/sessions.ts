@@ -158,8 +158,8 @@ export async function getSessionStats() {
   const session = await auth()
   if (!session?.user?.id) throw new Error('Unauthorized')
 
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
+  const { getLocalToday } = await import('@/lib/date-utils')
+  const today = getLocalToday()
 
   const weekAgo = new Date(today)
   weekAgo.setDate(weekAgo.getDate() - 7)
@@ -216,8 +216,8 @@ export async function getSessionStats() {
 }
 
 async function updateStreakForSession(userId: string, durationMinutes: number) {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
+  const { getLocalToday } = await import('@/lib/date-utils')
+  const today = getLocalToday()
 
   const streak = await prisma.studyStreak.findUnique({ where: { userId } })
   if (!streak) return
@@ -251,8 +251,8 @@ async function updateStreakForSession(userId: string, durationMinutes: number) {
   if (!lastActive) {
     newStreak = 1
   } else {
-    const lastActiveDay = new Date(lastActive)
-    lastActiveDay.setHours(0, 0, 0, 0)
+    const { getLocalStartOfDay } = await import('@/lib/date-utils')
+    const lastActiveDay = getLocalStartOfDay(lastActive)
     if (lastActiveDay.getTime() === yesterday.getTime()) {
       newStreak = streak.currentStreak + 1
     } else if (lastActiveDay.getTime() < yesterday.getTime()) {
@@ -277,8 +277,8 @@ async function updateProductivitySnapshot(
   focusScore: number | undefined | null,
   distractionCount: number
 ) {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
+  const { getLocalToday } = await import('@/lib/date-utils')
+  const today = getLocalToday()
 
   const existing = await prisma.productivitySnapshot.findUnique({
     where: { userId_date: { userId, date: today } },

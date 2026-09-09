@@ -1,5 +1,7 @@
 import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
+import { format } from 'date-fns'
+import { formatLocal } from '@/lib/date-utils'
 import { prisma } from '@/lib/prisma'
 import { getSessionStats } from '@/server/actions/sessions'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -54,8 +56,8 @@ export default async function DashboardPage() {
 
   const userId = session.user.id
 
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
+  const { getLocalToday } = await import('@/lib/date-utils')
+  const today = getLocalToday()
 
   const [
     stats,
@@ -153,7 +155,7 @@ export default async function DashboardPage() {
     (sum, s) => sum + s.distractionEvents.length, 0
   )
   const recentDistractionDuration = recentSessions.reduce(
-    (sum, s) => sum + s.distractionEvents.reduce((d, e) => d + (e.durationSeconds || 0), 0), 0
+    (sum, s) => sum + s.distractionEvents.reduce((d, e) => d + (e.duration || 0), 0), 0
   ) / 60
   const prevSession = recentSessions[0]
   const prevFocusScore = prevSession?.focusScore ?? 75
@@ -211,10 +213,10 @@ export default async function DashboardPage() {
           <h1 className="text-4xl font-extrabold tracking-tight mb-2 drop-shadow-sm">
             {getGreeting()}, <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#B8A9C9] to-[#D4B5E5]">{session.user.name?.split(' ')[0] || 'Student'}</span>
           </h1>
-          <p className="text-gray-300 font-medium opacity-90 flex items-center">
+          <div className="flex items-center text-zinc-300">
             <Calendar className="w-4 h-4 mr-2" />
-            {formatDate(new Date())}
-          </p>
+            <span>{formatLocal(new Date(), "EEEE, MMMM d")}</span>
+          </div>
         </div>
         {/* Abstract background shapes */}
         <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 rounded-full bg-gradient-to-br from-[#B8A9C9] to-transparent opacity-20 blur-3xl"></div>

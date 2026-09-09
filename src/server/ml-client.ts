@@ -90,6 +90,11 @@ async function mlFetch<T>(
   options: RequestInit = {}
 ): Promise<T | null> {
   try {
+    // In production, if ML_SERVICE_URL is localhost, skip the fetch to prevent latency
+    if (process.env.NODE_ENV === 'production' && ML_SERVICE_URL.includes("localhost")) {
+      return null;
+    }
+
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), ML_TIMEOUT);
 

@@ -38,8 +38,8 @@ export async function decomposeTask(taskId: string): Promise<{
   if (!task) return { error: "Task not found" };
 
   // Check rate limit (10 per day per user)
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const { getLocalToday } = await import('@/lib/date-utils');
+  const today = getLocalToday();
   const todayDecompositions = await prisma.prediction.count({
     where: {
       userId: session.user.id,
