@@ -43,16 +43,23 @@ export function CreateTaskDialog({
       description: description || undefined,
       subjectId: subjectId === 'none' ? undefined : (subjectId || undefined),
       topicId: topicId === 'none' ? undefined : (topicId || undefined),
-      deadline: deadline || undefined,
+      deadline: deadline ? new Date(deadline).toISOString() : undefined,
       estimatedMinutes: parseInt(estimatedMinutes) || 30,
       difficulty: parseInt(difficulty) || 3,
       priority: parseInt(priority) || 3,
     }
     
+    let res;
     if (taskToEdit) {
-      await updateTask({ id: taskToEdit.id, ...payload })
+      res = await updateTask({ id: taskToEdit.id, ...payload })
     } else {
-      await createTask(payload)
+      res = await createTask(payload)
+    }
+    
+    if (res?.error) {
+      alert(res.error)
+      setLoading(false)
+      return
     }
     
     setLoading(false)
